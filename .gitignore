@@ -1,0 +1,18 @@
+# Executables & Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test & Benchmark output
+*.out
+*.test
+
+# IDE & OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Local Launch & Social Media Kit
+X_POSTS_AND_SHOWCASE.md
