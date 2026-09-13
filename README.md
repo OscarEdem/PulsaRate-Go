@@ -3,7 +3,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=flat&logo=go)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Benchmark](https://img.shields.io/badge/Decision%20Latency-~12ns-brightgreen)](#performance--benchmarks)
+[![Benchmark](https://img.shields.io/badge/Decision%20Latency-~29ns-brightgreen)](#performance--benchmarks)
 [![Redis Reduction](https://img.shields.io/badge/Redis%20EVAL%20Reduction-94%25-orange)](#system-architecture)
 
 > **Carrier-Grade, Distributed Token Bucket & Dynamic Edge Rate Limiter in Go.**
@@ -14,10 +14,10 @@ PulsaRate-Go solves the centralized Redis bottleneck in high-concurrency microse
 
 ## Key Features
 
-* **Sub-Millisecond Decision Latency:** Local CPU evaluation runs in ~12ns with zero allocations ($0\text{ B/op}$) using `sync/atomic`.
-* **94%+ Redis Load Reduction:** Replaces per-request Redis `EVAL` calls with asynchronous, lazy-batched token leases (e.g. 50 tokens per 50ms window).
+* **Sub-Millisecond Decision Latency:** Local CPU evaluation runs in ~29ns with zero allocations ($0\text{ B/op}$) using `sync/atomic`.
+* **94%+ Redis Load Reduction:** Replaces per-request Redis `EVAL` calls with asynchronous, lazy-batched token leases (e.g. 25 tokens per 50ms window).
 * **Circuit Breaker & Graceful Fallback:** Automatically degrades to local sliding-window limits during Redis network partitions or high latency ($>50\text{ms}$).
-* **Native Integrations:** Operates as standard Go `net/http` middleware, Gin/Fiber framework plugins, or a standalone Envoy gRPC `ExtAuthz` sidecar.
+* **Native Framework Integrations:** Direct support for Go `net/http` middleware, **Gin Web Framework** (`GinRateLimit`), and standalone Envoy gRPC `ExtAuthz` sidecars.
 * **Production Observability:** Built-in Prometheus metrics (`rate_limit_allowed_total`, `rate_limit_rejected_total`, `redis_lease_duration_seconds`) and OpenTelemetry distributed tracing.
 * **Adaptive PID Controller:** Dynamically scales local batch quotas and applies host backpressure based on $p99$ tail latencies.
 
@@ -59,48 +59,65 @@ go get github.com/OscarEdem/PulsaRate-Go
 
 ---
 
-## Quick Start
+## Quick Start Examples
 
-### 1. Standard Go `net/http` Middleware
+### 1. Gin Web Framework Middleware
+```go
+package main
+
+import (
+    "github.com/gin-gonic/gin"
+    "github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
+    "github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
+)
+
+func main() {
+    r := gin.Default()
+
+    // Initialize PulsaRate Engine (Capacity = 100 req burst, Refill = 20 req/sec)
+    cfg := limiter.Config{
+        Capacity:   100,
+        RefillRate: 20,
+        BatchSize:  25,
+    }
+    engine, _ := limiter.NewEngine(cfg, nil)
+
+    // Global Rate Limiting for all Gin routes
+    r.Use(middleware.GinRateLimit(engine))
+
+    r.GET("/api/v1/resource", func(c *gin.Context) {
+        c.JSON(200, gin.H{"status": "success", "message": "Resource accessed"})
+    })
+
+    r.Run(":8080")
+}
+```
+
+### 2. Standard Go `net/http` Middleware
 ```go
 package main
 
 import (
     "net/http"
 
-    "github.com/pulsarate/pulsarate-go/pkg/limiter"
-    "github.com/pulsarate/pulsarate-go/pkg/middleware"
+    "github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
+    "github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
 )
 
 func main() {
-    // Initialize PulsaRate Engine with Redis Leaser
-    engine, err := limiter.NewEngine(limiter.Config{
+    engine, _ := limiter.NewEngine(limiter.Config{
         Capacity:   100,
-        RefillRate: 10, // tokens/sec
-        BatchSize:  20, // batch lease allocation
-        RedisURL:   "localhost:6379",
-    })
-    if err != nil {
-        panic(err)
-    }
+        RefillRate: 20,
+        BatchSize:  25,
+    }, nil)
 
     mux := http.NewServeMux()
     mux.HandleFunc("/api/v1/resource", func(w http.ResponseWriter, r *http.Request) {
         w.Write([]byte(`{"status": "ok"}`))
     })
 
-    // Wrap handler with PulsaRate Rate Limiter Middleware
     http.ListenAndServe(":8080", middleware.RateLimit(engine)(mux))
 }
-```
-
-### 2. Gin Framework Middleware
-```go
-r := gin.Default()
-r.Use(ginmiddleware.RateLimit(engine))
-r.GET("/ping", func(c *gin.Context) {
-    c.JSON(200, gin.H{"message": "pong"})
-})
 ```
 
 ---
@@ -112,11 +129,11 @@ Benchmarked on an AMD EPYC 7763 CPU @ 2.45GHz running 64 concurrent threads:
 | Engine / Strategy | Latency (p99) | Throughput | Allocations | Redis RPS |
 | :--- | :--- | :--- | :--- | :--- |
 | Central Redis `EVAL` | 24.5 ms | 8,200 RPS | 420 B/op | 8,200 req/s |
-| **PulsaRate Local Atomic** | **12.4 ns** | **120,000+ RPS** | **0 B/op** | **450 req/s (94% drop)** |
+| **PulsaRate Local Atomic** | **29.08 ns** | **52,800,000+ RPS** | **0 B/op** | **450 req/s (94% drop)** |
 
 To run local benchmarks:
 ```bash
-go test -bench=BenchmarkLocalBucket_Allow -benchmem ./pkg/limiter/...
+go test -bench=BenchmarkAtomicBucket_Allow -benchmem ./pkg/limiter/...
 ```
 
 ---

@@ -17,29 +17,30 @@ flowchart TD
         SecurityGroup --> PulsaRate["PulsaRate Rate Limiter (Port 80/8080)"]
         
         subgraph AppStack["Local Host Processes"]
-            PulsaRate -- "Local Atomic Check (~12ns)" --> PulsaRate
+            PulsaRate -- "Local Atomic Check (~29ns)" --> PulsaRate
             PulsaRate -. "Async Batch Lease" .-> LocalRedis[("Local Redis (Port 6379)")]
-            PulsaRate -- "Forward Allowed Traffic" --> API["Your API (Go / Node / Python)"]
+            PulsaRate -- "Forward Allowed Traffic" --> API["Your API (Go / Gin / Node / Python)"]
             API <--> PostgreSQL[("Local PostgreSQL (Port 5432)")]
         end
     end
 ```
 
-### Scenario A: Embedded Go Middleware on EC2
-If your API is written in Go, PulsaRate runs in-process inside your application binary with $0\text{ B/op}$ memory allocations:
+### Scenario A: Embedded Middleware on EC2 (Go / Gin)
+If your API is written in Go or the **Gin Web Framework**, PulsaRate runs in-process inside your application binary with $0\text{ B/op}$ memory allocations:
 
 ```go
 package main
 
 import (
     "log"
-    "net/http"
-
-    "github.com/pulsarate/pulsarate-go/pkg/limiter"
-    "github.com/pulsarate/pulsarate-go/pkg/middleware"
+    "github.com/gin-gonic/gin"
+    "github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
+    "github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
 )
 
 func main() {
+    r := gin.Default()
+
     cfg := limiter.Config{
         Capacity:   100,
         RefillRate: 20,
@@ -51,12 +52,14 @@ func main() {
         log.Fatalf("PulsaRate engine error: %v", err)
     }
 
-    mux := http.NewServeMux()
-    mux.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte(`{"status":"ok"}`))
+    // Protect all routes with GinRateLimit middleware
+    r.Use(middleware.GinRateLimit(engine))
+
+    r.GET("/api/data", func(c *gin.Context) {
+        c.JSON(200, gin.H{"status": "ok"})
     })
 
-    log.Fatal(http.ListenAndServe(":8080", middleware.RateLimit(engine)(mux)))
+    log.Fatal(r.Run(":8080"))
 }
 ```
 
@@ -74,7 +77,7 @@ After=network.target redis.service
 
 [Service]
 Type=simple
-User=ec2-user
+User=ubuntu
 ExecStart=/usr/local/bin/pulsaim
 Restart=always
 
@@ -100,9 +103,9 @@ flowchart TD
         Firewall --> PulsaRate["PulsaRate Rate Limiter (Port 80/8080)"]
         
         subgraph LocalHost["VM Local Host"]
-            PulsaRate -- "Local Atomic Check (~12ns)" --> PulsaRate
+            PulsaRate -- "Local Atomic Check (~29ns)" --> PulsaRate
             PulsaRate -. "Async Batch Lease" .-> Memorystore[("GCP Memorystore / Local Redis (6379)")]
-            PulsaRate -- "Forward Allowed Traffic" --> API["Your API (Go / Node / Python)"]
+            PulsaRate -- "Forward Allowed Requests" --> API["Your API (Go / Gin / Node / Python)"]
             API <--> CloudSQL[("GCP Cloud SQL / Local Postgres (5432)")]
         end
     end
@@ -155,4 +158,4 @@ gcloud run deploy pulsarate-proxy \
 | **PostgreSQL Protection** | Prevents DB connection pool saturation | Protects GCP Cloud SQL connection limits |
 | **Redis Efficiency** | Reduces Redis CPU load by 94%+ | Cuts GCP Memorystore billing operations by 94%+ |
 | **Scaling Capability** | Scale via AWS Auto Scaling Groups (ASG) | Auto-scales serverless containers 0 to 1,000+ instances |
-| **Decision Latency** | Sub-millisecond (~12ns CPU RAM) | Sub-millisecond (~12ns CPU RAM) |
+| **Decision Latency** | Sub-millisecond (~29ns CPU RAM) | Sub-millisecond (~29ns CPU RAM) |
