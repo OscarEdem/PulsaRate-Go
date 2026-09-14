@@ -3,7 +3,6 @@ package sync
 import (
 	"context"
 	"errors"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -56,7 +55,6 @@ type RedisLeaser struct {
 	state           int32 // CircuitState (atomic)
 	consecErrors    int64
 	lastStateChange int64 // Unix nanoseconds
-	mu              sync.RWMutex
 }
 
 // NewRedisLeaser instantiates a RedisLeaser.

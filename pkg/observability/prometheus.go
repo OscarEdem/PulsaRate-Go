@@ -1,7 +1,6 @@
 package observability
 
 import (
-	"sync"
 	"sync/atomic"
 )
 
@@ -12,7 +11,6 @@ type MetricsCollector struct {
 	allowedTotal  int64
 	rejectedTotal int64
 	leasesTotal   int64
-	mu            sync.RWMutex
 }
 
 // Global default metrics collector instance
