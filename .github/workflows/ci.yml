@@ -107,11 +107,11 @@ jobs:
           go-version: "1.22"
           cache: true
 
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
+
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.60.1
-          args: --timeout=5m
+        run: golangci-lint run --timeout=5m ./...
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 4: Build Verification (all targets)
