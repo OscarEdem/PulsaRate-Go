@@ -37,7 +37,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: true
 
       - name: Download dependencies
         run: go mod download
@@ -48,10 +47,14 @@ jobs:
           REDIS_ADDR: localhost:6379
 
       - name: Run integration tests
-        run: go test -v -race -count=1 ./test/...
+        run: |
+          if [ -d "./test" ]; then
+            go test -v -race -count=1 ./test/...
+          else
+            echo "No ./test directory found, skipping integration tests."
+          fi
         env:
           REDIS_ADDR: localhost:6379
-        continue-on-error: true  # integration test dir may not exist yet
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 2: Zero-Allocation Benchmark Regression Guard
@@ -69,7 +72,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: true
 
       - name: Download dependencies
         run: go mod download
@@ -105,7 +107,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: true
 
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
@@ -134,7 +135,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache: true
 
       - name: Download dependencies
         run: go mod download
