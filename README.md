@@ -54,7 +54,7 @@ flowchart TD
 ## Installation
 
 ```bash
-go get github.com/OscarEdem/PulsaRate-Go
+go get github.com/aeroforge-labs/PulsaRate-Go
 ```
 
 ---
@@ -67,8 +67,8 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
-    "github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
+    "github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
+    "github.com/aeroforge-labs/PulsaRate-Go/pkg/middleware"
 )
 
 func main() {
@@ -100,8 +100,8 @@ package main
 import (
     "net/http"
 
-    "github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
-    "github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
+    "github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
+    "github.com/aeroforge-labs/PulsaRate-Go/pkg/middleware"
 )
 
 func main() {

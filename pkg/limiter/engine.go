@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	pulsaSync "github.com/OscarEdem/PulsaRate-Go/pkg/sync"
+	pulsaSync "github.com/aeroforge-labs/PulsaRate-Go/pkg/sync"
 )
 
 // ------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                #*eddiere

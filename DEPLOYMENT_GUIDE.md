@@ -34,8 +34,8 @@ package main
 import (
     "log"
     "github.com/gin-gonic/gin"
-    "github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
-    "github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
+    "github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
+    "github.com/aeroforge-labs/PulsaRate-Go/pkg/middleware"
 )
 
 func main() {

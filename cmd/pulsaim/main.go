@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
-	"github.com/OscarEdem/PulsaRate-Go/pkg/middleware"
-	"github.com/OscarEdem/PulsaRate-Go/pkg/observability"
+	"github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
+	"github.com/aeroforge-labs/PulsaRate-Go/pkg/middleware"
+	"github.com/aeroforge-labs/PulsaRate-Go/pkg/observability"
 )
 
 // ------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                #*eddiere

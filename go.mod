@@ -1,4 +1,4 @@
-module github.com/OscarEdem/PulsaRate-Go
+module github.com/aeroforge-labs/PulsaRate-Go
 
 go 1.25.0
 

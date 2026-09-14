@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
+	"github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
 )
 
 // ------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                #*eddiere

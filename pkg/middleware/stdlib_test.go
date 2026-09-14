@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
+	"github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
 )
 
 // ------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                #*eddiere

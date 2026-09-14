@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/OscarEdem/PulsaRate-Go/pkg/limiter"
+	"github.com/aeroforge-labs/PulsaRate-Go/pkg/limiter"
 )
 
 // ------------------------------------------------------------------------------------------------------------------                                                                                                                                                                                #*eddiere
