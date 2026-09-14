@@ -26,20 +26,20 @@ func main() {
 	_, err := client.Get(targetURL)
 	if err != nil {
 		fmt.Println("No external server detected on :8080. Initializing internal high-speed PulsaRate server...")
-		
+
 		cfg := limiter.Config{
 			Capacity:   10,
 			RefillRate: 2,
 			BatchSize:  5,
 		}
 		engine, _ := limiter.NewEngine(cfg, nil)
-		
+
 		mux := http.NewServeMux()
 		mux.HandleFunc("/api/v1/resource", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte(`{"status":"ok"}`))
 		})
-		
+
 		testServer = httptest.NewServer(middleware.RateLimit(engine)(mux))
 		defer testServer.Close()
 		targetURL = testServer.URL + "/api/v1/resource"

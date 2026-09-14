@@ -36,8 +36,8 @@ type Result struct {
 
 // Config defines initialization parameters for a LocalBucket.
 type Config struct {
-	Capacity   int64         `json:"capacity"`     // Maximum token capacity (burst limit)
-	RefillRate int64         `json:"refill_rate"`  // Tokens added per second
-	BatchSize  int64         `json:"batch_size"`   // Lease batch reservation size for Tier-2 sync
-	Window     time.Duration `json:"window"`       // Time window (default 1s)
+	Capacity   int64         `json:"capacity"`    // Maximum token capacity (burst limit)
+	RefillRate int64         `json:"refill_rate"` // Tokens added per second
+	BatchSize  int64         `json:"batch_size"`  // Lease batch reservation size for Tier-2 sync
+	Window     time.Duration `json:"window"`      // Time window (default 1s)
 }

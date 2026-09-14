@@ -3,7 +3,6 @@ package sync
 import (
 	"context"
 	"errors"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -51,12 +50,11 @@ type LeaserConfig struct {
 
 // RedisLeaser manages Tier-2 asynchronous batch token reservations from Redis with circuit breaking.
 type RedisLeaser struct {
-	client       RedisClient
-	cfg          LeaserConfig
-	state        int32 // CircuitState (atomic)
-	consecErrors int64
+	client          RedisClient
+	cfg             LeaserConfig
+	state           int32 // CircuitState (atomic)
+	consecErrors    int64
 	lastStateChange int64 // Unix nanoseconds
-	mu           sync.RWMutex
 }
 
 // NewRedisLeaser instantiates a RedisLeaser.
