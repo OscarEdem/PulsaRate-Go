@@ -1,0 +1,115 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in PulsaRate-Go
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug. Please fill out the sections below as completely as possible.
+        **Do not report security vulnerabilities here** — see [SECURITY.md](../SECURITY.md) instead.
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go Version
+      description: Output of `go version`
+      placeholder: "go version go1.22.5 linux/amd64"
+    validations:
+      required: true
+
+  - type: input
+    id: pulsarate-version
+    attributes:
+      label: PulsaRate-Go Version / Commit
+      description: Version tag or full commit hash
+      placeholder: "v0.1.0 or abc1234"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "Ubuntu 24.04 / macOS 14.5 / Windows 11"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of PulsaRate-Go is affected?
+      options:
+        - pkg/limiter (atomic bucket core)
+        - pkg/limiter (Redis lease worker)
+        - pkg/middleware (Gin)
+        - pkg/middleware (net/http)
+        - pkg/middleware (Envoy ExtAuthz)
+        - Circuit breaker / fallback
+        - Adaptive PID controller
+        - Prometheus / OpenTelemetry observability
+        - Other / Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I configure BatchSize=25 and RefillRate=20, the local bucket allows more requests than the configured Capacity during Redis downtime..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal code snippet or steps that reliably reproduce the issue.
+      render: go
+      placeholder: |
+        engine, _ := limiter.NewEngine(limiter.Config{
+            Capacity:   10,
+            RefillRate: 5,
+            BatchSize:  25,
+        }, nil)
+        // ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include logs, stack traces, or benchmark output if relevant.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: benchmark
+    attributes:
+      label: Benchmark Output (if performance-related)
+      description: Output of `go test -bench=. -benchmem ./pkg/limiter/...`
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am NOT reporting a security vulnerability (see SECURITY.md).
+          required: true
+        - label: I have reproduced this on the latest `main` branch.
+          required: false

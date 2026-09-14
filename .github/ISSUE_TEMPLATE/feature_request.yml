@@ -1,0 +1,75 @@
+name: Feature Request
+description: Propose a new feature, algorithm, backend, or middleware integration for PulsaRate-Go
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement to **PulsaRate-Go**! Please fill out this form so we can evaluate the proposal.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      options:
+        - New rate-limiting algorithm (e.g. sliding window, fixed window, leaky bucket)
+        - New backend / storage adapter (e.g. Memcached, DynamoDB, in-memory only)
+        - New middleware integration (e.g. Echo, Chi, gRPC-Go, Fasthttp)
+        - Performance improvement to existing hot path
+        - Observability / metrics enhancement
+        - Configuration / API ergonomics
+        - Developer experience / tooling
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What gap does it address?
+      placeholder: "Currently PulsaRate-Go only supports token bucket. For use cases requiring strict per-second limits without burst tolerance, a sliding window counter would be more appropriate..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like. Include API shape, configuration options, or algorithm details if you have them.
+      render: go
+      placeholder: |
+        // Proposed API
+        engine, _ := limiter.NewEngine(limiter.Config{
+            Algorithm: limiter.SlidingWindow,
+            WindowSize: time.Second,
+            Limit: 100,
+        }, redisClient)
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What workarounds or alternative approaches have you tried or considered?
+
+  - type: textarea
+    id: invariants
+    attributes:
+      label: Performance Constraints
+      description: |
+        PulsaRate-Go's core invariant is **0 B/op, lock-free atomic evaluation**. 
+        How does your proposed feature interact with this constraint? Is a performance trade-off acceptable?
+      placeholder: "This algorithm would require a small fixed-size ring buffer allocation at initialization but zero allocations per request decision..."
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am willing to contribute a PR to implement this feature.
+          required: false

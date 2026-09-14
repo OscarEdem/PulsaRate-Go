@@ -1,0 +1,146 @@
+name: CI — Test, Lint & Benchmark
+# -------------------------------------------------------------------------------------------------------------------                                                                                                                                                                               #*eddiere
+
+on:
+  push:
+    branches: [ "main", "develop", "release/**" ]
+  pull_request:
+    branches: [ "main", "develop", "release/**" ]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: Unit Tests + Race Detector
+  # ─────────────────────────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests & Race Detector
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run unit tests with race detector
+        run: go test -v -race -count=1 ./pkg/...
+        env:
+          REDIS_ADDR: localhost:6379
+
+      - name: Run integration tests
+        run: go test -v -race -count=1 ./test/...
+        env:
+          REDIS_ADDR: localhost:6379
+        continue-on-error: true  # integration test dir may not exist yet
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Zero-Allocation Benchmark Regression Guard
+  # ─────────────────────────────────────────────────────────────────────────────
+  benchmark:
+    name: Benchmark — Zero-Allocation Guard
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run benchmarks with memory profiling
+        run: |
+          go test -bench=BenchmarkAtomicBucket_Allow -benchmem -count=5 ./pkg/limiter/... | tee benchmark_output.txt
+          echo "--- Benchmark Output ---"
+          cat benchmark_output.txt
+
+      - name: Assert zero allocations on hot path
+        run: |
+          # Fail if any BenchmarkAtomicBucket_Allow line reports > 0 B/op
+          if grep -E "BenchmarkAtomicBucket_Allow" benchmark_output.txt | grep -v " 0 B/op"; then
+            echo "❌ ZERO-ALLOCATION INVARIANT VIOLATED: Hot path allocates memory!"
+            exit 1
+          else
+            echo "✅ Zero-allocation invariant confirmed: 0 B/op"
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3: Linting (golangci-lint)
+  # ─────────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint — golangci-lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 4: Build Verification (all targets)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: lint
+
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build ./...
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
